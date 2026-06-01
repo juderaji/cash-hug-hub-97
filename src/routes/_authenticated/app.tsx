@@ -4,7 +4,7 @@ import { accountsQuery, recurringQuery, plannedQuery, transactionsQuery, savings
 import { formatNGN } from "@/lib/format";
 import { computeForecast } from "@/lib/forecast";
 import { PageHeader } from "@/components/AppSidebar";
-import { ArrowDownRight, ArrowUpRight, TrendingUp, AlertTriangle, ArrowLeftRight, PiggyBank, Image, ArrowRight } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, TrendingUp, AlertTriangle, ArrowLeftRight, PiggyBank } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import { endOfMonth, startOfMonth, format } from "date-fns";
 
@@ -80,26 +80,26 @@ function Dashboard() {
       <PageHeader title="Dashboard" subtitle={format(now, "EEEE, MMMM d")} />
 
       <div className="flex flex-col">
-      <div className="order-1 mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-[#d9f1ff] via-[#c9ebfb] to-[#b7d8f5] shadow-soft sm:mb-6">
-        <div className="grid min-h-[190px] gap-4 p-5 sm:min-h-[220px] sm:p-7 lg:grid-cols-[1fr_0.9fr]">
-          <div className="flex max-w-xl flex-col justify-center">
-            <span className="ui-tech text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/75">Your money, made clearer</span>
-            <h2 className="mt-2 max-w-md text-2xl font-bold uppercase leading-tight tracking-[0.035em] text-foreground sm:text-3xl">Plan calmly. Spend with context.</h2>
-            <p className="mt-2 max-w-md text-sm leading-6 text-foreground/65">Keep an eye on everyday spending, upcoming commitments, and the savings you have set aside.</p>
-            <Link to="/savings" className="mt-4 inline-flex w-fit items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-soft hover:bg-primary/90">
-              <span className="ui-tech uppercase">Review savings</span> <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+      <div className="order-1 mb-4 grid gap-3 sm:mb-6 sm:gap-4 lg:grid-cols-[1.65fr_0.85fr]">
+        <div className="relative min-h-[210px] overflow-hidden rounded-xl bg-primary shadow-soft sm:min-h-[280px] sm:rounded-2xl lg:min-h-[320px]">
+          <img src="/bank-hall.jpg" alt="A modern bank hall" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/75 via-primary/20 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-6">
+            <span className="ui-tech text-[10px] font-semibold uppercase tracking-[0.2em] text-white/75">Your money, made clearer</span>
+            <h2 className="mt-1.5 max-w-md text-xl font-bold uppercase leading-tight tracking-[0.035em] sm:text-2xl">Plan calmly. Spend with context.</h2>
           </div>
-          <div className="relative hidden min-h-40 overflow-hidden rounded-2xl border border-white/55 bg-white/30 lg:block">
-            <div className="absolute -right-8 -top-12 h-52 w-52 rounded-full bg-white/35" />
-            <div className="absolute bottom-4 left-5 right-5 top-4 grid place-items-center rounded-xl border border-dashed border-primary/30 bg-white/20 text-center">
-              <div>
-                <Image className="mx-auto h-6 w-6 text-primary/55" />
-                <div className="mt-2 text-xs font-semibold text-primary/70">Artwork placeholder</div>
-                <div className="mt-1 text-[11px] text-foreground/50">Your generated illustration will live here.</div>
-              </div>
-            </div>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:rounded-2xl sm:p-5">
+          <h2 className="mb-3 text-sm font-semibold sm:mb-4 sm:text-base">{format(now, "MMMM")} overview</h2>
+          <div className="space-y-3">
+            <OverviewRow label="Income" value={formatNGN(monthIncome)} tone="success" />
+            <OverviewRow label="Expenses" value={formatNGN(monthExpense)} tone="destructive" />
+            <OverviewRow label="Net cash flow" value={formatNGN(monthNet)} tone={monthNet >= 0 ? "success" : "destructive"} />
+            <OverviewRow label="Current balance" value={formatNGN(totalBalance)} />
           </div>
+          <Link to="/transactions" className="ui-tech mt-5 inline-flex text-xs font-semibold uppercase text-primary hover:text-primary/80">
+            View transactions
+          </Link>
         </div>
       </div>
       <div className="order-2 grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
@@ -109,18 +109,8 @@ function Dashboard() {
         <StatCard label="Spent this month" value={formatNGN(monthExpense)} icon={<ArrowDownRight className="text-destructive h-4 w-4" />} />
       </div>
 
-      <div className="order-3 mt-4 grid gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-3">
+      <div className="order-3 mt-4 grid gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-[1.35fr_0.85fr]">
         <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:rounded-2xl sm:p-5">
-          <h2 className="mb-3 text-sm font-semibold sm:mb-4 sm:text-base">{format(now, "MMMM")} overview</h2>
-          <div className="space-y-3">
-            <OverviewRow label="Income" value={formatNGN(monthIncome)} tone="success" />
-            <OverviewRow label="Expenses" value={formatNGN(monthExpense)} tone="destructive" />
-            <OverviewRow label="Net cash flow" value={formatNGN(monthNet)} tone={monthNet >= 0 ? "success" : "destructive"} />
-            <OverviewRow label="Current balance" value={formatNGN(totalBalance)} />
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:rounded-2xl sm:p-5 lg:col-span-2">
           <h2 className="mb-3 text-sm font-semibold sm:mb-4 sm:text-base">Recent activity</h2>
           {recentActivity.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">No transactions yet.</p>
@@ -141,32 +131,6 @@ function Dashboard() {
                 </li>
               ))}
             </ul>
-          )}
-        </div>
-      </div>
-
-      <div className="order-5 mt-4 grid gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-3">
-        <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:rounded-2xl sm:p-5 lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold sm:text-base">Forecast for {format(now, "MMMM")}</h2>
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </div>
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
-            <ForecastRow label="Projected month-end" value={formatNGN(forecast.projectedMonthEnd)} highlight />
-            <ForecastRow label="Safe daily spend" value={formatNGN(forecast.safeDailySpend)} />
-            <ForecastRow label="Avg daily spend" value={formatNGN(forecast.avgDailyVariableSpend)} />
-            <ForecastRow label="Expected income" value={formatNGN(forecast.expectedIncomeRemaining)} />
-            <ForecastRow label="Bills remaining" value={formatNGN(forecast.recurringBillsRemaining)} />
-            <ForecastRow label="Planned remaining" value={formatNGN(forecast.plannedRemaining)} />
-          </div>
-          {forecast.runOutDate && (
-            <div className="mt-4 flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-              <div>
-                At your current pace, funds may run out around <strong>{format(forecast.runOutDate, "MMM d")}</strong>.
-                Trim daily spend to <strong>{formatNGN(forecast.safeDailySpend)}</strong> to finish the month safely.
-              </div>
-            </div>
           )}
         </div>
 
@@ -207,6 +171,30 @@ function Dashboard() {
             </>
           )}
         </div>
+      </div>
+
+      <div className="order-5 mt-4 rounded-xl border border-border bg-surface p-4 shadow-soft sm:mt-6 sm:rounded-2xl sm:p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold sm:text-base">Forecast for {format(now, "MMMM")}</h2>
+          <TrendingUp className="h-4 w-4 text-primary" />
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+          <ForecastRow label="Projected month-end" value={formatNGN(forecast.projectedMonthEnd)} highlight />
+          <ForecastRow label="Safe daily spend" value={formatNGN(forecast.safeDailySpend)} />
+          <ForecastRow label="Avg daily spend" value={formatNGN(forecast.avgDailyVariableSpend)} />
+          <ForecastRow label="Expected income" value={formatNGN(forecast.expectedIncomeRemaining)} />
+          <ForecastRow label="Bills remaining" value={formatNGN(forecast.recurringBillsRemaining)} />
+          <ForecastRow label="Planned remaining" value={formatNGN(forecast.plannedRemaining)} />
+        </div>
+        {forecast.runOutDate && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <div>
+              At your current pace, funds may run out around <strong>{format(forecast.runOutDate, "MMM d")}</strong>.
+              Trim daily spend to <strong>{formatNGN(forecast.safeDailySpend)}</strong> to finish the month safely.
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="order-4 mt-4 grid gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-2">

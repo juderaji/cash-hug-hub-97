@@ -60,12 +60,10 @@ function Dashboard() {
     else catMap.set(name, { name, value: Number(t.amount), color });
   }
   const catData = Array.from(catMap.values()).sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
-  const categoryTotal = catData.reduce((sum, category) => sum + category.value, 0);
-
-  // Last 6 months bar chart
+  // Current-year monthly trend
   const monthly: { month: string; income: number; expense: number }[] = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  for (let month = 0; month < 12; month++) {
+    const d = new Date(now.getFullYear(), month, 1);
     const ms = startOfMonth(d), me = endOfMonth(d);
     const inRange = tx.filter((t) => new Date(t.occurred_on) >= ms && new Date(t.occurred_on) <= me);
     monthly.push({
@@ -109,7 +107,7 @@ function Dashboard() {
         <StatCard label="Spent this month" value={formatNGN(monthExpense)} icon={<ArrowDownRight className="text-destructive h-4 w-4" />} />
       </div>
 
-      <div className="order-3 mt-4 grid gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-[1.35fr_0.85fr]">
+      <div className="order-3 mt-4 grid gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-3">
         <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:rounded-2xl sm:p-5">
           <h2 className="mb-3 text-sm font-semibold sm:mb-4 sm:text-base">Recent activity</h2>
           {recentActivity.length === 0 ? (
@@ -130,6 +128,38 @@ function Dashboard() {
                   </div>
                 </li>
               ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:rounded-2xl sm:p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold sm:text-base">Allocated savings</h2>
+            <PiggyBank className="h-4 w-4 text-primary" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <ForecastRow label="Allocated to goals" value={formatNGN(allocatedSavings)} highlight />
+            <ForecastRow label="Still unallocated" value={formatNGN(unallocatedSavings)} />
+          </div>
+          {savingsGoals.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">No savings goals yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {savingsGoals.slice(0, 5).map((goal) => {
+                const target = Number(goal.target_amount || 0);
+                const pct = target > 0 ? Math.min(100, (Number(goal.saved_amount) / target) * 100) : 0;
+                return (
+                  <li key={goal.id}>
+                    <div className="flex items-center justify-between gap-3 text-sm mb-1">
+                      <span className="flex min-w-0 items-center gap-2"><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: goal.color }} /><span className="truncate">{goal.name}</span></span>
+                      <span className="num shrink-0 text-muted-foreground">{formatNGN(goal.saved_amount, { compact: true })}</span>
+                    </div>
+                    {target > 0 && <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                      <div className="h-full transition-all" style={{ width: pct + "%", background: goal.color }} />
+                    </div>}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -164,7 +194,7 @@ function Dashboard() {
                 {catData.slice(0, 5).map((c) => (
                   <li key={c.name} className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} /> {c.name}</span>
-                    <span className="num text-muted-foreground">{formatNGN(c.value, { compact: true })} · {Math.round((c.value / categoryTotal) * 100)}%</span>
+                    <span className="num text-muted-foreground">{formatNGN(c.value, { compact: true })}</span>
                   </li>
                 ))}
               </ul>
@@ -197,10 +227,10 @@ function Dashboard() {
         )}
       </div>
 
-      <div className="order-4 mt-4 grid gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-2">
+      <div className="order-4 mt-4 sm:mt-6">
         <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:rounded-2xl sm:p-5">
-          <h2 className="mb-3 text-sm font-semibold sm:mb-4 sm:text-base">Last 6 months</h2>
-          <ResponsiveContainer width="100%" height={190}>
+          <h2 className="mb-3 text-sm font-semibold sm:mb-4 sm:text-base">{now.getFullYear()} monthly trend</h2>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthly}>
               <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => formatNGN(v, { compact: true })} />
@@ -209,38 +239,6 @@ function Dashboard() {
               <Bar dataKey="expense" fill="var(--primary)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
-
-        <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:rounded-2xl sm:p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold sm:text-base">Allocated savings</h2>
-            <PiggyBank className="h-4 w-4 text-primary" />
-          </div>
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <ForecastRow label="Allocated to goals" value={formatNGN(allocatedSavings)} highlight />
-            <ForecastRow label="Still unallocated" value={formatNGN(unallocatedSavings)} />
-          </div>
-          {savingsGoals.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No savings goals yet.</p>
-          ) : (
-            <ul className="space-y-3">
-              {savingsGoals.slice(0, 5).map((goal) => {
-                const target = Number(goal.target_amount || 0);
-                const pct = target > 0 ? Math.min(100, (Number(goal.saved_amount) / target) * 100) : 0;
-                return (
-                  <li key={goal.id}>
-                    <div className="flex items-center justify-between gap-3 text-sm mb-1">
-                      <span className="flex min-w-0 items-center gap-2"><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: goal.color }} /><span className="truncate">{goal.name}</span></span>
-                      <span className="num shrink-0 text-muted-foreground">{formatNGN(goal.saved_amount, { compact: true })}</span>
-                    </div>
-                    {target > 0 && <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                      <div className="h-full transition-all" style={{ width: pct + "%", background: goal.color }} />
-                    </div>}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
         </div>
       </div>
       </div>

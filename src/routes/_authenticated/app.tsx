@@ -109,24 +109,30 @@ function Dashboard() {
             <p className="text-sm text-muted-foreground py-8 text-center">No expenses yet this month.</p>
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={catData}
-                    dataKey="value"
-                    innerRadius={45}
-                    outerRadius={70}
-                    paddingAngle={2}
-                    startAngle={90}
-                    endAngle={-270}
-                    label={({ percent }) => `${Math.round((percent ?? 0) * 100)}%`}
-                    labelLine={false}
-                  >
-                    {catData.map((c, i) => <Cell key={i} fill={c.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(v: number) => formatNGN(v)} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie
+                      data={catData}
+                      dataKey="value"
+                      innerRadius={50}
+                      outerRadius={78}
+                      paddingAngle={2}
+                      startAngle={90}
+                      endAngle={-270}
+                      label={renderDonutLabel}
+                      labelLine={false}
+                    >
+                      {catData.map((c, i) => <Cell key={i} fill={c.color} />)}
+                    </Pie>
+                    <Tooltip formatter={(v: number) => formatNGN(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="pointer-events-none absolute inset-0 grid place-content-center text-center">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Total spent</span>
+                  <span className="num mt-0.5 text-sm font-semibold">{formatNGN(categoryTotal, { compact: true })}</span>
+                </div>
+              </div>
               <ul className="mt-2 space-y-1.5">
                 {catData.slice(0, 5).map((c) => (
                   <li key={c.name} className="flex items-center justify-between text-sm">
@@ -203,5 +209,20 @@ function ForecastRow({ label, value, highlight }: { label: string; value: string
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className={`num text-lg font-semibold mt-1 ${highlight ? "text-primary" : ""}`}>{value}</div>
     </div>
+  );
+}
+
+function renderDonutLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) {
+  if (!percent || percent < 0.05) return null;
+
+  const radius = Number(innerRadius) + (Number(outerRadius) - Number(innerRadius)) * 0.5;
+  const angle = -Number(midAngle) * (Math.PI / 180);
+  const x = Number(cx) + radius * Math.cos(angle);
+  const y = Number(cy) + radius * Math.sin(angle);
+
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="text-[11px] font-semibold">
+      {Math.round(percent * 100)}%
+    </text>
   );
 }

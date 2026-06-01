@@ -31,7 +31,7 @@ function Landing() {
 
       <section className="mx-auto max-w-6xl px-6 pt-20 pb-28">
         <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted-foreground">
-          <Sparkles className="h-3 w-3 text-primary" /> Built for naira spenders
+          <Sparkles className="h-3 w-3 text-primary" /> Built for everyday money decisions
         </div>
         <h1 className="mt-6 max-w-3xl text-5xl font-bold tracking-tight md:text-7xl">
           Your money,<br />

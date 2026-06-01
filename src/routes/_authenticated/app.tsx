@@ -52,7 +52,8 @@ function Dashboard() {
     if (existing) existing.value += Number(t.amount);
     else catMap.set(name, { name, value: Number(t.amount), color });
   }
-  const catData = Array.from(catMap.values()).sort((a, b) => b.value - a.value);
+  const catData = Array.from(catMap.values()).sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
+  const categoryTotal = catData.reduce((sum, category) => sum + category.value, 0);
 
   // Last 6 months bar chart
   const monthly: { month: string; income: number; expense: number }[] = [];
@@ -110,7 +111,17 @@ function Dashboard() {
             <>
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
-                  <Pie data={catData} dataKey="value" innerRadius={45} outerRadius={70} paddingAngle={2}>
+                  <Pie
+                    data={catData}
+                    dataKey="value"
+                    innerRadius={45}
+                    outerRadius={70}
+                    paddingAngle={2}
+                    startAngle={90}
+                    endAngle={-270}
+                    label={({ percent }) => `${Math.round((percent ?? 0) * 100)}%`}
+                    labelLine={false}
+                  >
                     {catData.map((c, i) => <Cell key={i} fill={c.color} />)}
                   </Pie>
                   <Tooltip formatter={(v: number) => formatNGN(v)} />
@@ -120,7 +131,7 @@ function Dashboard() {
                 {catData.slice(0, 5).map((c) => (
                   <li key={c.name} className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} /> {c.name}</span>
-                    <span className="num text-muted-foreground">{formatNGN(c.value, { compact: true })}</span>
+                    <span className="num text-muted-foreground">{formatNGN(c.value, { compact: true })} · {Math.round((c.value / categoryTotal) * 100)}%</span>
                   </li>
                 ))}
               </ul>

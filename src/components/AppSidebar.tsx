@@ -27,7 +27,7 @@ export function AppSidebar() {
   };
   return (
     <TooltipProvider delayDuration={150}>
-    <aside className={`sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden bg-sidebar transition-[width] duration-300 md:flex ${expanded ? "w-56" : "w-20"}`}>
+    <aside className={`hidden h-screen shrink-0 flex-col overflow-hidden bg-sidebar transition-[width] duration-300 md:flex ${expanded ? "w-56" : "w-20"}`}>
       <div className={`flex items-center px-3 py-5 ${expanded ? "justify-start" : "justify-center"}`}>
         <Link to="/" aria-label="Pocketstead home" className="font-display font-bold text-white">
           {expanded ? <PocketsteadLogo /> : <PocketsteadMark className="h-10 w-10 rounded-xl shadow-soft" />}

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { AuthShell, Field, Divider, GoogleIcon } from "./login";
+import { PUBLIC_SITE_URL } from "@/integrations/supabase/config";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [{ title: "Create your Finlo account" }] }),
@@ -30,7 +31,7 @@ function SignupPage() {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin + "/app",
+        emailRedirectTo: PUBLIC_SITE_URL + "/app",
         data: { display_name: name },
       },
     });
@@ -40,7 +41,7 @@ function SignupPage() {
   };
 
   const onGoogle = async () => {
-    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/app" });
+    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: PUBLIC_SITE_URL + "/app" });
     if (res.error) toast.error("Google sign-up failed");
   };
 

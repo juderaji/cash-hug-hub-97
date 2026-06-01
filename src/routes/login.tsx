@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import { PUBLIC_SITE_URL } from "@/integrations/supabase/config";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Finlo" }] }),
@@ -34,7 +35,7 @@ function LoginPage() {
   };
 
   const onGoogle = async () => {
-    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/app" });
+    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: PUBLIC_SITE_URL + "/app" });
     if (res.error) toast.error("Google sign-in failed");
   };
 

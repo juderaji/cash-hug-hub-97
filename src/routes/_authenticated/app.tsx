@@ -209,12 +209,12 @@ function Dashboard() {
           <TrendingUp className="h-4 w-4 text-primary" />
         </div>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
-          <ForecastRow label="Projected month-end" value={formatNGN(forecast.projectedMonthEnd)} highlight />
+          <ForecastRow label="Projected month-end" value={formatNGN(forecast.projectedMonthEnd)} highlight tone={forecast.projectedMonthEnd >= 0 ? "success" : "destructive"} />
           <ForecastRow label="Safe daily spend" value={formatNGN(forecast.safeDailySpend)} />
-          <ForecastRow label="Avg daily spend" value={formatNGN(forecast.avgDailyVariableSpend)} />
-          <ForecastRow label="Expected income" value={formatNGN(forecast.expectedIncomeRemaining)} />
-          <ForecastRow label="Bills remaining" value={formatNGN(forecast.recurringBillsRemaining)} />
-          <ForecastRow label="Planned remaining" value={formatNGN(forecast.plannedRemaining)} />
+          <ForecastRow label="Avg daily spend" value={formatNGN(forecast.avgDailyVariableSpend)} tone="destructive" />
+          <ForecastRow label="Expected income" value={formatNGN(forecast.expectedIncomeRemaining)} tone="success" />
+          <ForecastRow label="Bills remaining" value={formatNGN(forecast.recurringBillsRemaining)} tone="destructive" />
+          <ForecastRow label="Planned remaining" value={formatNGN(forecast.plannedRemaining)} tone="destructive" />
         </div>
         {forecast.runOutDate && (
           <div className="mt-4 flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -268,11 +268,11 @@ function OverviewRow({ label, value, tone }: { label: string; value: string; ton
   );
 }
 
-function ForecastRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function ForecastRow({ label, value, highlight, tone }: { label: string; value: string; highlight?: boolean; tone?: "success" | "destructive" }) {
   return (
-    <div className={`rounded-lg p-2.5 sm:p-3 ${highlight ? "bg-primary-soft" : "bg-secondary"}`}>
+    <div className={`rounded-lg p-2.5 sm:p-3 ${tone === "success" ? "bg-success/10" : tone === "destructive" ? "bg-destructive/10" : highlight ? "bg-primary-soft" : "bg-secondary"}`}>
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`num mt-1 truncate text-sm font-semibold sm:text-lg ${highlight ? "text-primary" : ""}`}>{value}</div>
+      <div className={`num mt-1 truncate text-sm font-semibold sm:text-lg ${tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive" : highlight ? "text-primary" : ""}`}>{value}</div>
     </div>
   );
 }

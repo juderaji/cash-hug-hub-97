@@ -214,7 +214,7 @@ function Dashboard() {
           <ForecastRow label="Avg daily spend" value={formatNGN(forecast.avgDailyVariableSpend)} tone="destructive" />
           <ForecastRow label="Expected income" value={formatNGN(forecast.expectedIncomeRemaining)} tone="success" />
           <ForecastRow label="Bills remaining" value={formatNGN(forecast.recurringBillsRemaining)} tone="destructive" />
-          <ForecastRow label="Planned remaining" value={formatNGN(forecast.plannedRemaining)} tone="destructive" />
+          <ForecastRow label="Saved" value={formatNGN(allocatedSavings)} tone="success" />
         </div>
         {forecast.runOutDate && (
           <div className="mt-4 flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">

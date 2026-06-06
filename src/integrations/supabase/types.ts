@@ -333,6 +333,7 @@ export type Database = {
           description: string | null
           id: string
           occurred_on: string
+          savings_goal_id: string | null
           transfer_id: string | null
           type: string
           user_id: string
@@ -345,6 +346,7 @@ export type Database = {
           description?: string | null
           id?: string
           occurred_on?: string
+          savings_goal_id?: string | null
           transfer_id?: string | null
           type?: string
           user_id: string
@@ -357,6 +359,7 @@ export type Database = {
           description?: string | null
           id?: string
           occurred_on?: string
+          savings_goal_id?: string | null
           transfer_id?: string | null
           type?: string
           user_id?: string
@@ -376,6 +379,13 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "transactions_savings_goal_id_fkey"
+            columns: ["savings_goal_id"]
+            isOneToOne: false
+            referencedRelation: "savings_goals"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -393,6 +403,18 @@ export type Database = {
       delete_category: {
         Args: {
           p_category_id: string
+        }
+        Returns: undefined
+      }
+      create_transaction: {
+        Args: {
+          p_account_id: string
+          p_amount: number
+          p_category_id: string | null
+          p_description: string
+          p_occurred_on: string
+          p_savings_goal_id?: string | null
+          p_type: string
         }
         Returns: undefined
       }
@@ -425,6 +447,7 @@ export type Database = {
           p_category_id: string | null
           p_description: string
           p_occurred_on: string
+          p_savings_goal_id?: string | null
           p_transaction_id: string
           p_type: string
         }

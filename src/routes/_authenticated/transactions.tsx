@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQueries, useQueryClient } from "@tanstack/react-query";
-import { transactionsQuery, accountsQuery, categoriesQuery } from "@/lib/queries";
+import { transactionsQuery, accountsQuery, categoriesQuery, savingsGoalsQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNGN, formatDate } from "@/lib/format";
 import { PageHeader } from "@/components/AppSidebar";
@@ -17,13 +17,14 @@ export const Route = createFileRoute("/_authenticated/transactions")({
       context.queryClient.ensureQueryData(transactionsQuery),
       context.queryClient.ensureQueryData(accountsQuery),
       context.queryClient.ensureQueryData(categoriesQuery),
+      context.queryClient.ensureQueryData(savingsGoalsQuery),
     ]),
   component: TxPage,
 });
 
 function TxPage() {
-  const [{ data: tx }, { data: accounts }, { data: categories }] = useSuspenseQueries({
-    queries: [transactionsQuery, accountsQuery, categoriesQuery],
+  const [{ data: tx }, { data: accounts }, { data: categories }, { data: savingsGoals }] = useSuspenseQueries({
+    queries: [transactionsQuery, accountsQuery, categoriesQuery, savingsGoalsQuery],
   });
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -91,8 +92,8 @@ function TxPage() {
           </ul>
         </div>
       )}
-      {open && <TxDialog onClose={() => setOpen(false)} accounts={accounts} categories={categories} />}
-      {editing && <TxDialog transaction={editing} onClose={() => setEditing(null)} accounts={accounts} categories={categories} />}
+      {open && <TxDialog onClose={() => setOpen(false)} accounts={accounts} categories={categories} savingsGoals={savingsGoals} />}
+      {editing && <TxDialog transaction={editing} onClose={() => setEditing(null)} accounts={accounts} categories={categories} savingsGoals={savingsGoals} />}
       {transferOpen && <TransferDialog onClose={() => setTransferOpen(false)} accounts={accounts} transactions={tx} />}
       {editingTransfer && <TransferDialog transfer={editingTransfer} onClose={() => setEditingTransfer(null)} accounts={accounts} transactions={tx} />}
       <BtnStyles />
@@ -291,7 +292,7 @@ function TransferDialog({ onClose, accounts, transactions, transfer }: { onClose
   );
 }
 
-function TxDialog({ onClose, accounts, categories, transaction }: { onClose: () => void; accounts: any[]; categories: any[]; transaction?: any }) {
+function TxDialog({ onClose, accounts, categories, savingsGoals, transaction }: { onClose: () => void; accounts: any[]; categories: any[]; savingsGoals: any[]; transaction?: any }) {
   const qc = useQueryClient();
   const [type, setType] = useState<"income" | "expense">(transaction?.type ?? "expense");
   const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
@@ -299,11 +300,15 @@ function TxDialog({ onClose, accounts, categories, transaction }: { onClose: () 
   const [category_id, setCategory] = useState(transaction?.category_id ?? "");
   const [description, setDescription] = useState(transaction?.description ?? "");
   const [occurred_on, setDate] = useState(transaction?.occurred_on ?? new Date().toISOString().slice(0, 10));
+  const [savings_goal_id, setSavingsGoal] = useState(transaction?.savings_goal_id ?? "");
   const [saving, setSaving] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [createdCategories, setCreatedCategories] = useState<any[]>([]);
 
   const filteredCats = [...categories, ...createdCategories].filter((c) => c.kind === type);
+  const selectedAccount = accounts.find((account) => account.id === account_id);
+  const accountSavingsGoals = savingsGoals.filter((goal) => goal.account_id === account_id);
+  const showSavingsSource = type === "expense" && selectedAccount?.type === "savings";
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -315,20 +320,18 @@ function TxDialog({ onClose, accounts, categories, transaction }: { onClose: () 
       ({ error } = await supabase.rpc("update_transaction", {
         p_transaction_id: transaction.id, p_account_id: account_id, p_category_id: category_id || null,
         p_amount: amt, p_type: type, p_description: description, p_occurred_on: occurred_on,
+        p_savings_goal_id: showSavingsSource && savings_goal_id ? savings_goal_id : null,
       }));
     } else {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setSaving(false); return; }
-      ({ error } = await supabase.from("transactions").insert({
-        user_id: user.id, account_id, category_id: category_id || null, amount: amt, type, description, occurred_on,
+      ({ error } = await supabase.rpc("create_transaction", {
+        p_account_id: account_id,
+        p_category_id: category_id || null,
+        p_amount: amt,
+        p_type: type,
+        p_description: description,
+        p_occurred_on: occurred_on,
+        p_savings_goal_id: showSavingsSource && savings_goal_id ? savings_goal_id : null,
       }));
-      if (!error && account_id) {
-        const acc = accounts.find((a) => a.id === account_id);
-        if (acc) {
-          const delta = type === "income" ? amt : -amt;
-          await supabase.from("accounts").update({ balance: Number(acc.balance) + delta }).eq("id", account_id);
-        }
-      }
     }
     setSaving(false);
     if (error) toast.error(error.message);
@@ -340,15 +343,26 @@ function TxDialog({ onClose, accounts, categories, transaction }: { onClose: () 
       <form onSubmit={save} className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           {(["expense", "income"] as const).map((t) => (
-            <button key={t} type="button" onClick={() => { setType(t); setCategory(""); }} className={`rounded-lg border px-3 py-2 text-sm capitalize font-medium ${type === t ? "bg-primary text-primary-foreground border-primary" : "border-border bg-surface"}`}>{t}</button>
+            <button key={t} type="button" onClick={() => { setType(t); setCategory(""); setSavingsGoal(""); }} className={`rounded-lg border px-3 py-2 text-sm capitalize font-medium ${type === t ? "bg-primary text-primary-foreground border-primary" : "border-border bg-surface"}`}>{t}</button>
           ))}
         </div>
         <Field label="Amount (₦)"><input required type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="finlo-input" /></Field>
         <Field label="Account">
-          <select required value={account_id} onChange={(e) => setAccount(e.target.value)} className="finlo-input">
+          <select required value={account_id} onChange={(e) => { setAccount(e.target.value); setSavingsGoal(""); }} className="finlo-input">
             {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
         </Field>
+        {showSavingsSource && (
+          <Field label="Savings source">
+            <select value={savings_goal_id} onChange={(e) => setSavingsGoal(e.target.value)} className="finlo-input">
+              <option value="">Unallocated savings</option>
+              {accountSavingsGoals.map((goal) => (
+                <option key={goal.id} value={goal.id}>{goal.name} ({formatNGN(goal.saved_amount)})</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">Choose a pot if this spend should reduce money already set aside.</p>
+          </Field>
+        )}
         <Field label="Category">
           <select value={category_id} onChange={(e) => {
             if (e.target.value === "__add_category__") setCategoryOpen(true);

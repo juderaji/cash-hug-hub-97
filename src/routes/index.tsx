@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Calendar, LineChart, ShoppingCart, Wallet, Sparkles } from "lucide-react";
+import { ArrowRight, Calendar, LineChart, PiggyBank, Wallet, Sparkles } from "lucide-react";
 import { PocketsteadLogo } from "@/components/PocketsteadLogo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Pocketstead | A personal finance operating system" },
-      { name: "description", content: "More than budgeting. Plan purchases, forecast your runway, and never miss a bill." },
+      { name: "description", content: "Track accounts, plan spending, allocate savings, and understand where your money is going." },
     ],
   }),
   component: Landing,
@@ -38,8 +38,8 @@ function Landing() {
           <span className="text-primary">predicted</span> not just tracked.
         </h1>
         <p className="mt-4 max-w-xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
-          Pocketstead is a complete personal finance OS. Plan purchases, forecast your runway, and know
-          exactly when your balance will run thin, before it does.
+          Pocketstead helps you track accounts, organize spending, set money aside, and plan the next few
+          weeks with more context.
         </p>
         <div className="mt-7 flex flex-wrap gap-3 sm:mt-10">
           <Link to="/signup" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-primary-foreground font-medium hover:bg-primary/90 shadow-soft">
@@ -53,9 +53,9 @@ function Landing() {
         <div className="mt-12 grid gap-3 sm:mt-20 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Wallet, title: "Wallets & transactions", desc: "Track every account in one place with categorized history." },
-            { icon: LineChart, title: "Forecast engine", desc: "Project your month-end balance and your run-out date." },
-            { icon: Calendar, title: "Financial calendar", desc: "See bills, salary and planned purchases day by day." },
-            { icon: ShoppingCart, title: "Shopping intel", desc: "Every wishlist item shows whether you can afford it." },
+            { icon: LineChart, title: "Monthly forecast", desc: "Estimate your month-end balance from income, spending, bills, and plans." },
+            { icon: Calendar, title: "Editable calendar", desc: "Add, edit, and complete planned spending directly from the calendar." },
+            { icon: PiggyBank, title: "Savings allocations", desc: "Split money inside savings accounts into practical goals and unallocated funds." },
           ].map((f) => (
             <div key={f.title} className="rounded-xl border border-primary/10 bg-primary-soft/55 p-4 shadow-soft sm:rounded-2xl sm:p-5">
               <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary-soft text-primary">

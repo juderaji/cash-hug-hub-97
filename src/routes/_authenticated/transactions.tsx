@@ -300,19 +300,25 @@ function TxDialog({ onClose, accounts, categories, savingsGoals, transaction }: 
   const [category_id, setCategory] = useState(transaction?.category_id ?? "");
   const [description, setDescription] = useState(transaction?.description ?? "");
   const [occurred_on, setDate] = useState(transaction?.occurred_on ?? new Date().toISOString().slice(0, 10));
-  const [savings_goal_id, setSavingsGoal] = useState(transaction?.savings_goal_id ?? "");
+  const [savingsSource, setSavingsSource] = useState(transaction?.savings_goal_id ?? "");
   const [saving, setSaving] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [createdCategories, setCreatedCategories] = useState<any[]>([]);
 
   const filteredCats = [...categories, ...createdCategories].filter((c) => c.kind === type);
   const selectedAccount = accounts.find((account) => account.id === account_id);
-  const accountSavingsGoals = savingsGoals.filter((goal) => goal.account_id === account_id);
-  const showSavingsSource = type === "expense" && selectedAccount?.type === "savings";
+  const accountSavingsGoals = savingsGoals.filter((goal) => goal.account_id === account_id && Number(goal.saved_amount) > 0);
+  const allocatedInAccount = accountSavingsGoals.reduce((sum, goal) => sum + Number(goal.saved_amount), 0);
+  const unallocatedInAccount = Math.max(0, Number(selectedAccount?.balance ?? 0) - allocatedInAccount);
+  const showSavingsSource = type === "expense" && selectedAccount?.type === "savings" && accountSavingsGoals.length > 0;
+  const selectedSavingsGoalId = showSavingsSource && savingsSource !== "__unallocated__" ? savingsSource : null;
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!account_id) return toast.error("Add an account first");
+    if (showSavingsSource && !savingsSource) {
+      return toast.error("Choose where this savings spend should come from");
+    }
     setSaving(true);
     const amt = Number(amount);
     let error;
@@ -320,7 +326,7 @@ function TxDialog({ onClose, accounts, categories, savingsGoals, transaction }: 
       ({ error } = await supabase.rpc("update_transaction", {
         p_transaction_id: transaction.id, p_account_id: account_id, p_category_id: category_id || null,
         p_amount: amt, p_type: type, p_description: description, p_occurred_on: occurred_on,
-        p_savings_goal_id: showSavingsSource && savings_goal_id ? savings_goal_id : null,
+        p_savings_goal_id: selectedSavingsGoalId,
       }));
     } else {
       ({ error } = await supabase.rpc("create_transaction", {
@@ -330,7 +336,7 @@ function TxDialog({ onClose, accounts, categories, savingsGoals, transaction }: 
         p_type: type,
         p_description: description,
         p_occurred_on: occurred_on,
-        p_savings_goal_id: showSavingsSource && savings_goal_id ? savings_goal_id : null,
+        p_savings_goal_id: selectedSavingsGoalId,
       }));
     }
     setSaving(false);
@@ -343,24 +349,25 @@ function TxDialog({ onClose, accounts, categories, savingsGoals, transaction }: 
       <form onSubmit={save} className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           {(["expense", "income"] as const).map((t) => (
-            <button key={t} type="button" onClick={() => { setType(t); setCategory(""); setSavingsGoal(""); }} className={`rounded-lg border px-3 py-2 text-sm capitalize font-medium ${type === t ? "bg-primary text-primary-foreground border-primary" : "border-border bg-surface"}`}>{t}</button>
+            <button key={t} type="button" onClick={() => { setType(t); setCategory(""); setSavingsSource(""); }} className={`rounded-lg border px-3 py-2 text-sm capitalize font-medium ${type === t ? "bg-primary text-primary-foreground border-primary" : "border-border bg-surface"}`}>{t}</button>
           ))}
         </div>
         <Field label="Amount (₦)"><input required type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="finlo-input" /></Field>
         <Field label="Account">
-          <select required value={account_id} onChange={(e) => { setAccount(e.target.value); setSavingsGoal(""); }} className="finlo-input">
+          <select required value={account_id} onChange={(e) => { setAccount(e.target.value); setSavingsSource(""); }} className="finlo-input">
             {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
         </Field>
         {showSavingsSource && (
           <Field label="Savings source">
-            <select value={savings_goal_id} onChange={(e) => setSavingsGoal(e.target.value)} className="finlo-input">
-              <option value="">Unallocated savings</option>
+            <select required value={savingsSource} onChange={(e) => setSavingsSource(e.target.value)} className="finlo-input">
+              <option value="">Choose where to debit this spend</option>
+              {unallocatedInAccount > 0 && <option value="__unallocated__">Unallocated savings ({formatNGN(unallocatedInAccount)})</option>}
               {accountSavingsGoals.map((goal) => (
                 <option key={goal.id} value={goal.id}>{goal.name} ({formatNGN(goal.saved_amount)})</option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-muted-foreground">Choose a pot if this spend should reduce money already set aside.</p>
+            <p className="mt-1 text-xs text-muted-foreground">This account has allocated money. Choose whether to debit unallocated savings or one of the pots.</p>
           </Field>
         )}
         <Field label="Category">
